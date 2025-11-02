@@ -102,8 +102,14 @@ export function RbacTab() {
     }
   }, [loadRoles])
 
-  const handleRoleModalSave = useCallback(async (formData: RoleFormData) => {
+  const handleRoleModalSave = useCallback(async (changes: PermissionChangeSet | RoleFormData) => {
     try {
+      // Type guard: ensure we have RoleFormData for role operations
+      if (!('name' in changes && 'description' in changes && 'permissions' in changes)) {
+        throw new Error('Invalid role data provided')
+      }
+
+      const formData = changes as RoleFormData
       const endpoint = roleModal.mode === 'role-create'
         ? '/api/admin/roles'
         : `/api/admin/roles/${formData.id}`
