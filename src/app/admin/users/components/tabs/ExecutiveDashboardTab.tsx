@@ -58,9 +58,99 @@ export function ExecutiveDashboardTab({
   const { data: analyticsData, isLoading: analyticsLoading } = useDashboardAnalytics()
   const [dashboardView, setDashboardView] = useState<'overview' | 'operations'>('overview')
 
+  // Operations section state (merged from DashboardTab)
+  const [filters, setFilters] = useState<UserFilters>({
+    search: '',
+    role: undefined,
+    status: undefined,
+    department: undefined,
+    dateRange: 'all'
+  })
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
+  const [bulkActionType, setBulkActionType] = useState<string>('')
+  const [bulkActionValue, setBulkActionValue] = useState<string>('')
+  const [isApplyingBulkAction, setIsApplyingBulkAction] = useState(false)
+
   const handleRefreshDashboard = () => {
     onRefresh?.()
   }
+
+  // Filter users based on active filters
+  const filteredUsers = users.filter((user) => {
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      const matchesSearch =
+        user.name?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower) ||
+        user.id?.toLowerCase().includes(searchLower)
+      if (!matchesSearch) return false
+    }
+    if (filters.role && user.role !== filters.role) {
+      return false
+    }
+    if (filters.status) {
+      const userStatus = user.status || (user.isActive ? 'ACTIVE' : 'INACTIVE')
+      if (userStatus !== filters.status) return false
+    }
+    return true
+  })
+
+  const displayMetrics: OperationsMetrics = stats || {
+    totalUsers: users.length,
+    pendingApprovals: 0,
+    inProgressWorkflows: 0,
+    dueThisWeek: 0
+  }
+
+  const handleSelectUser = (userId: string, selected: boolean) => {
+    const newSelected = new Set(selectedUserIds)
+    if (selected) {
+      newSelected.add(userId)
+    } else {
+      newSelected.delete(userId)
+    }
+    setSelectedUserIds(newSelected)
+  }
+
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedUserIds(new Set(filteredUsers.map((u) => u.id)))
+    } else {
+      setSelectedUserIds(new Set())
+    }
+  }
+
+  const handleApplyBulkAction = useCallback(async () => {
+    if (!bulkActionType || !bulkActionValue || selectedUserIds.size === 0) {
+      toast.error('Please select an action and value')
+      return
+    }
+
+    setIsApplyingBulkAction(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      let actionDescription = ''
+      if (bulkActionType === 'role') {
+        actionDescription = `Changed role to ${bulkActionValue}`
+      } else if (bulkActionType === 'status') {
+        actionDescription = `Changed status to ${bulkActionValue}`
+      } else if (bulkActionType === 'department') {
+        actionDescription = `Changed department to ${bulkActionValue}`
+      }
+
+      toast.success(`Applied to ${selectedUserIds.size} users: ${actionDescription}`)
+
+      setSelectedUserIds(new Set())
+      setBulkActionType('')
+      setBulkActionValue('')
+    } catch (error) {
+      toast.error('Failed to apply bulk action')
+      console.error('Bulk action error:', error)
+    } finally {
+      setIsApplyingBulkAction(false)
+    }
+  }, [bulkActionType, bulkActionValue, selectedUserIds.size])
 
   return (
     <div className="flex-1 overflow-auto">
