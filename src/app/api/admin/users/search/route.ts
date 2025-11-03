@@ -20,8 +20,8 @@ export interface UserFilterOptions {
   createdBefore?: string
   sortBy?: 'name' | 'email' | 'createdAt' | 'role'
   sortOrder?: 'asc' | 'desc'
-  page?: number
-  limit?: number
+  page: number
+  limit: number
 }
 
 export const GET = withTenantContext(async (request: NextRequest) => {
@@ -125,7 +125,9 @@ export const GET = withTenantContext(async (request: NextRequest) => {
 
     // Build sort order
     const orderBy: any = {}
-    orderBy[filters.sortBy] = filters.sortOrder
+    if (filters.sortBy) {
+      orderBy[filters.sortBy] = filters.sortOrder
+    }
 
     // Calculate pagination
     const skip = (filters.page - 1) * filters.limit
