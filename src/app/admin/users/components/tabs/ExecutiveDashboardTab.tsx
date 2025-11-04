@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { useDashboardMetrics, useDashboardRecommendations, useDashboardAnalytics, useFilterUsers, useServerSideFiltering } from '../../hooks'
-import { UserItem } from '../../contexts/UsersContextProvider'
+import { UserItem, useUsersContext } from '../../contexts/UsersContextProvider'
 import { toast } from 'sonner'
 
 interface ExecutiveDashboardTabProps {
