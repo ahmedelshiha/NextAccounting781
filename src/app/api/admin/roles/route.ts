@@ -96,6 +96,17 @@ export const POST = withTenantContext(async (req: Request) => {
       },
     })
 
+    // Emit real-time event for role creation
+    try {
+      realtimeService.emitRoleUpdated(newRole.id, {
+        action: 'created',
+        roleName: newRole.name,
+        permissions: newRole.permissions
+      })
+    } catch (err) {
+      console.error('Failed to emit role created event:', err)
+    }
+
     // Log role creation
     await AuditLoggingService.logAuditEvent({
       action: AuditActionType.ROLE_CREATED,
