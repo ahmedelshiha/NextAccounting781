@@ -664,6 +664,52 @@
 }
 
 /* ============================================================================
+   ACCESSIBILITY - FOCUS VISIBLE INDICATORS (WCAG 2.1 AA)
+   ============================================================================ */
+
+/* Global focus-visible styles for all interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary, #3b82f6);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Ensure focus visible ring is visible on white/light backgrounds */
+@media (prefers-color-scheme: light) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [tabindex]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Ensure focus visible ring is visible on dark backgrounds */
+@media (prefers-color-scheme: dark) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [tabindex]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* ============================================================================
    SIDEBAR CLOSE BUTTON
    ============================================================================ */
 
@@ -681,13 +727,15 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .sidebar-close-btn:hover {
   background: var(--accent);
 }
 
-.sidebar-close-btn:focus {
+.sidebar-close-btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
