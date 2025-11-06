@@ -225,6 +225,20 @@ Update the markdown file with this format:
 
 ---
 
+## 📚 RELATED PROJECT DOCUMENTATION
+
+### Entities Tab Retirement (Parallel Project - Ready for Rollout)
+The **Entities Tab Retirement** project (100% complete) is being coordinated with AdminWorkBench rollout. Review the following documentation:
+
+- **📊 Readiness Report:** `docs/ENTITIES_TAB_RETIREMENT_READINESS_REPORT.md` - Production-ready, verified complete
+- **📋 Implementation Plan:** `docs/ADMIN_ENTITIES_TAB_RETIREMENT_PLAN.md` - Full action plan
+- **🧪 Test Plan:** `docs/ENTITIES_TAB_RETIREMENT_TEST_PLAN.md` - 45 test cases documented
+- **✅ Validation Checklist:** `docs/ENTITIES_TAB_RETIREMENT_VALIDATION_CHECKLIST.md` - QA verification guide
+
+See `docs/DOCUMENTATION_INDEX.md` for complete navigation of all project documentation.
+
+---
+
 ## ❓ QUESTIONS & BLOCKERS
 
 If you have any questions or are blocked, please **immediately** post in the project channel with:
@@ -234,3 +248,12 @@ If you have any questions or are blocked, please **immediately** post in the pro
 - **Urgency**: [High/Medium/Low]
 
 Do not proceed with a task if you are unsure about the requirements.
+
+---
+
+## 📞 DOCUMENTATION SUPPORT
+
+For questions about documentation structure or references:
+- See `docs/DOCUMENTATION_INDEX.md` for central navigation
+- See `docs/ADMIN_WORKBENCH_PROJECT_STATUS.md` for comprehensive project overview
+- Contact the Engineering Lead for clarification on implementation details
