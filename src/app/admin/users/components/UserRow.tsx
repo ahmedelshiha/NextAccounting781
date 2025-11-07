@@ -148,10 +148,10 @@ const UserRow = memo(function UserRow({
       <div>
         <span
           className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${getStatusColor(
-            user.status
+            user.status || 'ACTIVE'
           )}`}
         >
-          {user.status}
+          {user.status || 'ACTIVE'}
         </span>
       </div>
 
