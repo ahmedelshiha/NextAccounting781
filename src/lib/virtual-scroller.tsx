@@ -45,7 +45,18 @@ export function VirtualScroller<T>({
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Convert maxHeight to pixels
-  const maxHeightPx = typeof maxHeight === 'number' ? maxHeight : parseInt(maxHeight)
+  const maxHeightPx = useMemo(() => {
+    if (typeof maxHeight === 'number') {
+      return maxHeight
+    }
+    // If it's a percentage or contains %, get actual container height
+    if (maxHeight.includes('%')) {
+      if (!containerRef.current) return 600 // fallback
+      return containerRef.current.clientHeight || 600
+    }
+    // Otherwise parse as pixel value (e.g., "300px" -> 300)
+    return parseInt(maxHeight.replace(/[^\d]/g, '')) || 600
+  }, [maxHeight, containerRef.current?.clientHeight])
 
   // Calculate visible range
   const visibleCount = Math.ceil(maxHeightPx / itemHeight)
