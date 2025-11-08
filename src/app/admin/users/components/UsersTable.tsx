@@ -63,10 +63,14 @@ export const UsersTable = memo(function UsersTable({
 
   const handleEditInline = useCallback(
     (userId: string, field: string, value: any) => {
-      // This would be handled by a separate mutation/API call
-      console.log(`Edit user ${userId}, field ${field}:`, value)
+      // Delegate to prop if provided
+      if (onEditInlineProp) {
+        try { onEditInlineProp(userId, field, value) } catch (e) { console.error(e) }
+      } else {
+        console.log(`Edit user ${userId}, field ${field}:`, value)
+      }
     },
-    []
+    [onEditInlineProp]
   )
 
   // Render a single user row with 6-column grid layout
