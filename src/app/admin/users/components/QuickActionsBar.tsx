@@ -37,7 +37,8 @@ export function QuickActionsBar({
   onImport,
   onExport,
   onRefresh,
-  isLoading = false
+  isLoading = false,
+  isRefreshing = false
 }: QuickActionsBarProps) {
   return (
     <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
