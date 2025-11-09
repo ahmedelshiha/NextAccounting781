@@ -23,7 +23,7 @@ interface SettingsTabProps {
 }
 
 export const SettingsTab = memo(function SettingsTab({ user }: SettingsTabProps) {
-  const { setPermissionModalOpen } = useUsersContext()
+  const { setPermissionModalOpen, permissionModalOpen, permissionsSaving } = useUsersContext()
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
