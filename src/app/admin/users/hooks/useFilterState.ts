@@ -32,20 +32,41 @@ export function useFilterState(users: UserItem[]) {
 
   // Memoized filtered results using existing useFilterUsers hook
   const filteredUsers = useMemo(() => {
-    const options = {
-      search: filters.search,
-      role: filters.role || undefined,
-      status: filters.status || undefined
+    let result = users
+
+    // Apply search filter using the existing hook for consistency
+    if (filters.search) {
+      const searchOptions = {
+        search: filters.search,
+        role: undefined,
+        status: undefined
+      }
+      result = useFilterUsers(result, searchOptions, {
+        searchFields: ['name', 'email', 'phone'],
+        caseInsensitive: true,
+        sortByDate: false,  // Don't sort yet, we'll sort at the end
+        serverSide: false
+      }) as UserItem[]
     }
-    
-    // Filter both ways - through hook and custom logic for phone field
-    let result = useFilterUsers(users, options, {
-      searchFields: ['name', 'email', 'phone'],
-      caseInsensitive: true,
-      sortByDate: true,
-      serverSide: false
-    }) as UserItem[]
-    
+
+    // Apply multi-select role filter (OR logic: match any selected role)
+    if (filters.roles.length > 0) {
+      result = result.filter(user => filters.roles.includes(user.role))
+    }
+
+    // Apply multi-select status filter (OR logic: match any selected status)
+    if (filters.statuses.length > 0) {
+      result = result.filter(user => {
+        const userStatus = user.status || 'ACTIVE'
+        return filters.statuses.includes(userStatus)
+      })
+    }
+
+    // Sort by creation date
+    result = result.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
     return result
   }, [users, filters])
 
