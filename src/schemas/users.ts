@@ -53,7 +53,7 @@ export const UserEditSchema = UserCreateSchema.omit({ email: true }).extend({
  */
 export const UserBulkAssignmentSchema = z.object({
   userIds: z.array(z.string().uuid()).min(1, 'Select at least one user'),
-  role: z.enum(['USER', 'TEAM_MEMBER', 'TEAM_LEAD', 'ADMIN']).optional(),
+  role: z.enum(['CLIENT', 'TEAM_MEMBER', 'STAFF', 'TEAM_LEAD', 'ADMIN']).optional(),
   permissions: z.array(z.string()).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 })
