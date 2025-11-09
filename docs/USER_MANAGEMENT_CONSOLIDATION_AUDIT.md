@@ -27,7 +27,7 @@ The following legacy components have been removed as part of the AdminWorkBench 
 - Sticky bulk operations footer
 - Improved user experience and accessibility
 
-**Feature Flag Infrastructure Retained:** The feature flag system in `src/lib/admin/featureFlags.ts` has been retained for future use with other features or gradual rollout strategies.
+**Feature Flags Now Hardcoded:** AdminWorkBench is now hardcoded to always-on. The feature flag functions in `src/lib/admin/featureFlags.ts` have been simplified to always return `true` (no environment variables needed). The infrastructure is retained for potential use with other features in the future.
 
 ---
 
@@ -529,7 +529,7 @@ Admin Users Dashboard (EnterpriseUsersPage)
    │  └─ Audit history
    │
    └─ Settings Tab
-      └��� Preferences, 2FA, etc.
+      └─ Preferences, 2FA, etc.
 ```
 
 ---
@@ -658,7 +658,7 @@ src/app/admin/users/components/UnifiedUsersTable.tsx
   │  └─ Dynamic Columns (based on userType):
   │     ├─ If showing clients:
   │     │  ├─ Company
-  ��     │  ├─ Tier
+  │     │  ├─ Tier
   │     │  ├─ Revenue
   │     │  └─ Last Booking
   │     │
