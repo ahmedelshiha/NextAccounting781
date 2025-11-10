@@ -187,7 +187,7 @@ export function getKeyName(key: string): string {
 /**
  * Check if focus is in a text input
  */
-function isInTextInput(): boolean {
+export function isInTextInput(): boolean {
   const activeEl = typeof document !== 'undefined' ? document.activeElement : null
   if (!activeEl) return false
   
@@ -210,51 +210,4 @@ export function formatShortcut(key: KeyboardShortcutKey, isMac = false): string 
   })
 
   return parts.join(' + ')
-}
-
-/**
- * Component to display keyboard shortcuts help
- */
-export interface KeyboardShortcutsHelpProps {
-  shortcuts: KeyboardShortcut[]
-  isOpen: boolean
-  onClose: () => void
-}
-
-export function KeyboardShortcutsHelp({
-  shortcuts,
-  isOpen,
-  onClose
-}: KeyboardShortcutsHelpProps) {
-  if (!isOpen) return null
-
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md max-h-96 overflow-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
-        
-        <div className="space-y-3">
-          {shortcuts.map((shortcut, idx) => (
-            <div key={idx} className="flex justify-between items-center text-sm">
-              <span className="text-gray-700">{shortcut.description}</span>
-              <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">
-                {formatShortcut(shortcut.key, isMac)}
-              </kbd>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
 }
