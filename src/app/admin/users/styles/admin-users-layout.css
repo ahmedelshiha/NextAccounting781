@@ -125,28 +125,55 @@
   background-color: #94a3b8;
 }
 
-/* Responsive Design - Tablet (768px to 1024px) */
-@media (max-width: 1024px) {
+/* Responsive Design - Tablet (768px to 1200px) */
+@media (max-width: 1200px) {
   .admin-workbench-main {
     grid-template-columns: 1fr;
   }
 
+  .admin-workbench-main:has(.admin-workbench-sidebar.open) {
+    grid-template-columns: 280px 1fr;
+  }
+
   .admin-workbench-sidebar {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
     width: 280px;
-    height: 100%;
-    z-index: 30;
+    height: 100vh;
+    z-index: 40;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
     border-right: 1px solid #e5e7eb;
+    border-bottom: none;
+  }
+
+  .admin-workbench-sidebar.open {
+    transform: translateX(0);
+    width: 280px;
   }
 
   .admin-workbench-sidebar.closed {
     width: 0;
     transform: translateX(-100%);
     box-shadow: none;
+    border-right: none;
+  }
+
+  /* Add overlay when sidebar is open */
+  .admin-workbench-container::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 35;
+    pointer-events: none;
+    transition: background-color 300ms ease-in-out;
+  }
+
+  .admin-workbench-container:has(.admin-workbench-sidebar.open)::before {
+    background-color: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
   }
 }
 
