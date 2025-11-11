@@ -33,10 +33,17 @@ export const POST = withTenantContext(async (request: NextRequest, { params }: {
       return NextResponse.json({ error: 'Invalid export format. Supported: pdf, xlsx, csv, json' }, { status: 400 })
     }
 
-    // Cast report to ensure sections are properly typed
-    const typedReport: Report = {
-      ...report,
-      sections: (Array.isArray(report.sections) ? report.sections : []) as ReportSection[]
+    // Cast sections to properly handle Prisma JSON types
+    const sections = Array.isArray(report.sections) ? (report.sections as unknown as ReportSection[]) : []
+    const typedReport = {
+      id: report.id,
+      tenantId: report.tenantId,
+      userId: report.userId,
+      name: report.name,
+      description: report.description,
+      sections: sections,
+      createdAt: report.createdAt.toISOString(),
+      updatedAt: report.updatedAt.toISOString()
     }
 
     const execution = await prisma.reportExecution.create({
@@ -68,8 +75,7 @@ export const POST = withTenantContext(async (request: NextRequest, { params }: {
         data = applyFilters(data, filters)
       }
 
-      // Cast sections as array to avoid JsonValue type issues
-      const sections = Array.isArray(typedReport.sections) ? (typedReport.sections as ReportSection[]) : []
+      // Sections already properly typed above
       const reportData = {
         columns: sections[0]?.columns || [],
         rows: data,
