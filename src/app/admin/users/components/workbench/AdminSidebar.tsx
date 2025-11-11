@@ -82,6 +82,10 @@ export default function AdminSidebar({
     }))
   }, [])
 
+  const toggleSidebarCollapse = useCallback(() => {
+    setIsCollapsed((prev) => !prev)
+  }, [])
+
   return (
     <div className="admin-sidebar-wrapper">
       {/* Header with close button (mobile) */}
