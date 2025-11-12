@@ -319,6 +319,132 @@ Phase 14 — Security & Compliance
 1) Step-up auth; device approvals; IP allowlist
 2) Retention schedules + legal holds; audit log reviews
 
+## Phased To‑Do Checklists (markable)
+
+Phase 0 — Foundations
+- [ ] Create country registry at src/lib/settings/registry.ts with UAE/KSA/EGY seeds
+- [ ] RBAC/SoD audit and tests in tests/integration/auth/*
+- [ ] RTL + Arabic toggle in src/app/layout.tsx and src/components/ui/navigation.tsx
+- [ ] Sentry perf spans in layout and API wrappers; monitoring dashboards updated
+- [ ] Feature flag gates for portal modules (NEXT_PUBLIC_*)
+
+Phase 1 — Entities & People
+- [ ] Prisma migration: entities, registrations, economic_zones
+- [ ] Services: src/services/entities/index.ts CRUD + validation
+- [ ] Admin UI for entities/people with role guards
+- [ ] Invitations + 2FA flows wired to UserProfile
+- [ ] CSV bulk import with validation and background job
+
+Phase 1.1 — Business Setup Wizard (Modular)
+- [ ] SetupWizard.tsx shell with ARIA Tabs and focus-trap
+- [ ] Tabs/{ExistingBusiness, NewStartup, Individual}.tsx (~120 LOC each)
+- [ ] Hooks {useSetupForm, useLicenseLookup} + zod schemas
+- [ ] API POST /api/entities/setup and GET /api/registries/:country/:number
+- [ ] Consent capture + audit events + idempotency keys
+- [ ] Dynamic import + Suspense + skeletons; ErrorBoundary per tab
+- [ ] E2E happy/duplicate/offline/manual-review
+
+Phase 1.1B — Verification
+- [ ] Worker src/lib/jobs/entity-setup.ts (queue, retries, pub/sub)
+- [ ] Pending/Success/Error screens with deep links
+- [ ] Telemetry events + unit tests for state machine
+
+Phase 2 — Dashboard (mobile/desktop)
+- [ ] Responsive grid + sidebar/bottom‑nav parity
+- [ ] Verification banner widget bound to setup status
+- [ ] Upcoming Compliance widget + counts API
+- [ ] Feature tiles (KYC, Documents, Invoicing, Upload Bill, Attendance, Approvals)
+- [ ] Command palette (Cmd/Ctrl+K) federated search
+- [ ] A11y/RTL pass + Sentry transactions per widget
+
+Phase 2.1 — Upcoming Compliances
+- [ ] Rules engine src/lib/compliance/rules.ts with tests
+- [ ] GET /api/compliance/upcoming + PATCH status + ICS export
+- [ ] Mobile month‑chips screen
+- [ ] Desktop two‑pane with filters and bulk actions
+
+Phase 2.2 — Features Hub
+- [ ] KYC Center forms + progress persistence
+- [ ] Documents quick links + recent/starred
+- [ ] Invoicing basic list/create
+- [ ] Upload Bill with OCR extraction + dedupe
+- [ ] Approvals queue + policies
+- [ ] Badges via counts API + feature flags
+
+Phase 2.3 — Services Directory
+- [ ] services model + seed
+- [ ] GET/POST endpoints
+- [ ] Search/typeahead + filters
+- [ ] Request flow → Messaging case
+- [ ] Tests and a11y checks
+
+Phase 2.4 — Profile & Account Center
+- [ ] Settings shell (desktop left‑nav, mobile sections)
+- [ ] Wallet (methods, invoices)
+- [ ] Cart + checkout to Payment Gateway
+- [ ] Preferences (lang/theme/notifications)
+- [ ] Security (2FA/biometric) + Sessions mgmt
+- [ ] Feedback/bug report + Support tickets
+
+Phase 3 — Documents Vault
+- [ ] Uploads pipeline + virus scan + versioning
+- [ ] OCR auto‑tagging and foldering
+- [ ] Link docs to filings/tasks
+- [ ] E‑sign integration interface
+
+Phase 4 — Messaging & Support
+- [ ] Case threads tied to filings/tasks with SLA timers
+- [ ] Knowledge base + ticketing
+- [ ] Live chat integration
+
+Phase 5 — Billing
+- [ ] Invoices UI + payment methods + webhooks
+- [ ] Dunning flows
+- [ ] Government payment reference capture + reconciliation
+
+Phase 6 — Banking & Receipts
+- [ ] Bank connectors + CSV fallback
+- [ ] Transaction import + matching pipeline
+- [ ] Receipt inbox + exception workflow
+
+Phase 7 — Country Workflows
+- [ ] UAE VAT/ESR/Corporate templates + validations
+- [ ] KSA VAT/Zakat/WHT templates + device metadata hooks
+- [ ] Egypt VAT/e‑Invoice templates + withholding rules
+
+Phase 8 — E‑Invoicing
+- [ ] ZATCA Phase‑2 adapter skeleton + tests
+- [ ] ETA clearance adapter skeleton + tests
+- [ ] Key storage/rotation + signing + conformance
+
+Phase 9 — AI Agents
+- [ ] Intake assistant + checklist generation
+- [ ] Doc classifier + anomaly detection + reviewer gate
+
+Phase 10 — Teams & Permissions
+- [ ] Spaces + shared views
+- [ ] Auditor links + redaction tools
+
+Phase 11 — A11y/Internationalization/Mobile polish
+- [ ] WCAG 2.2 AA audit + fixes
+- [ ] RTL screenshots + print‑friendly returns
+
+Phase 12 — Analytics & Reporting
+- [ ] Ops dashboards + alerts
+- [ ] Client reports + scheduled exports
+
+Phase 13 — Migration & Cutover
+- [ ] Legacy import + backfills
+- [ ] Dual‑run behind flags + rollback playbook
+
+Phase 14 — Security & Compliance
+- [ ] Step‑up auth + device approvals + IP allowlist
+- [ ] Retention schedules + legal holds + audit log review
+
+Phase 15 — Go‑Live & Stabilization
+- [ ] Canary cohorts + support playbook
+- [ ] NPS/CSAT instrumentation + backlog grooming
+
 ## Milestones & Suggested Order
 - M0: Phase 0
 - M1: Phases 1 + 1.1 + 1.1B
