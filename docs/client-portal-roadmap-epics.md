@@ -188,6 +188,89 @@ Epics: MDM-EN, BPM-EN, RULES-EN, INTEG-EN, DATA-EN, IAM-EN, GRC-EN, RESIL-EN, GL
 
 ---
 
+## Task Breakdown by Phase (Modular)
+
+Phase 0 — Foundations
+1) Create src/lib/settings/registry.ts with UAE/KSA/EGY seeds and tests
+2) Add RBAC roles/enums and SoD checks in auth utils; integration tests
+3) Add Arabic locales; enable RTL toggle in layout.tsx and navigation.tsx
+4) Sentry perf spans around layout and API; baseline dashboards under monitoring/
+5) CI: semgrep security job + size-limit check for pages
+
+Phase 1 — Entities & People
+1) Prisma migration: entities, registrations, economic_zones tables
+2) Service: src/services/entities/index.ts with CRUD + validation
+3) Admin pages for list/create/edit with role guards
+4) Invitations flow and email templates; 2FA toggles in UserProfile
+5) CSV importer with schema checks; background job and notifications
+
+Phase 1.1 — Setup Wizard (Modular tabs)
+1) SetupWizard.tsx shell + ARIA Tabs
+2) Tabs/{ExistingBusiness,NewStartup,Individual}.tsx kept ~120 LOC each
+3) Hooks: useSetupForm, useLicenseLookup with zod schemas
+4) API routes: POST /api/entities/setup; GET /api/registries/:country/license/:number
+5) Consent endpoint and audit events; idempotency keys
+6) Suspense + next/dynamic for tabs; skeletons and error boundaries
+7) E2E: happy path, duplicate, offline registry, manual review
+
+Phase 1.1B — Verification
+1) Job worker src/lib/jobs/entity-setup.ts (queue + retries)
+2) Pending/Success/Error screens with deep links; real-time via Redis pub/sub
+3) Telemetry events; unit tests for state machine
+
+Phase 2 — Dashboard (mobile+desktop)
+1) Responsive grid and sidebar/bottom-nav parity
+2) Verification banner widget wired to setup job status
+3) Upcoming Compliance widget; feature tiles with counts
+4) Command palette (Cmd/Ctrl+K) federated search
+5) Sentry transactions per widget; accessibility pass
+
+Phase 2.1 — Upcoming Compliances
+1) Rules engine src/lib/compliance/rules.ts with test vectors
+2) GET /api/compliance/upcoming groups by month; PATCH status; ICS export
+3) Mobile month chips screen; desktop two-pane with filters and bulk actions
+
+Phase 2.2 — Features Hub
+1) KYC Center forms + progress; Documents quick links; Invoicing, Upload Bill(OCR), Approvals
+2) Badges via counts API; feature flags to toggle modules
+3) Storybook stories for each tile
+
+Phase 2.3 — Services Directory
+1) services model + seed; GET/POST endpoints
+2) Search/typeahead + filters; Request flow opens Messaging case
+
+Phase 2.4 — Profile & Account Center
+1) Settings shell with left nav (desktop) and sections (mobile)
+2) Wallet (methods, invoices), Cart, Documents shortcut
+3) Preferences (lang/theme/notifications), Security (2FA/biometric), Sessions management
+4) Feedback/bug report + support tickets
+
+Phase 3 — Documents Vault
+1) Uploads pipeline with virus-scan; versioning; foldering
+2) OCR extraction + auto-tag; e-sign integration interface
+3) Link docs to filings/tasks; immutable audit trail
+
+Phase 5 — Billing
+1) Invoices, payment methods, webhooks; dunning
+2) Government payment reference capture + reconciliation
+
+Phase 6 — Banking & Receipts
+1) Bank connectors + CSV fallback; transaction import
+2) Receipt inbox + OCR; auto-match and exception workflows
+
+Phase 7 — Country Workflows
+1) UAE VAT/ESR/Corporate returns templates; validations
+2) KSA VAT/Zakat/WHT; device metadata placeholders
+3) Egypt VAT/e-Invoice; withholding rules
+
+Phase 8 — E‑Invoicing
+1) ZATCA Phase-2 adapter skeleton; ETA clearance adapter skeleton
+2) Key storage/rotation; signing; conformance tests
+
+Phase 14 — Security & Compliance
+1) Step-up auth; device approvals; IP allowlist
+2) Retention schedules + legal holds; audit log reviews
+
 ## Milestones & Suggested Order
 - M0: Phase 0
 - M1: Phases 1 + 1.1 + 1.1B
