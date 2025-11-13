@@ -40,7 +40,7 @@ export const GET = withTenantContext(async (request: NextRequest) => {
  * Saves intake questionnaire responses
  */
 const SaveResponsesSchema = z.object({
-  responses: z.record(z.any()),
+  responses: z.record(z.string(), z.any()),
   clientType: z.string().optional(),
   country: z.string().default('AE'),
   entityName: z.string().optional(),

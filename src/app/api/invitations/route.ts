@@ -18,6 +18,13 @@ export const POST = withTenantContext(
     try {
       const { userId, tenantId } = requireTenantContext();
 
+      if (!userId || !tenantId) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+
       const data = await request.json();
       const validated = createInvitationSchema.parse(data);
 

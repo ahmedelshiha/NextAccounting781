@@ -24,6 +24,10 @@ export const GET = withTenantContext(
     try {
       const { userId, tenantId } = requireTenantContext()
 
+      if (!userId || !tenantId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
       const queryParams = Object.fromEntries(request.nextUrl.searchParams)
       const filters = CategoryFilterSchema.parse(queryParams)
 
@@ -71,6 +75,10 @@ export const POST = withTenantContext(
   async (request: NextRequest) => {
     try {
       const { userId, tenantId } = requireTenantContext()
+
+      if (!userId || !tenantId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
       const body = await request.json()
       const validated = CreateCategorySchema.parse(body)
