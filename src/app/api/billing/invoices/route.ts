@@ -85,7 +85,7 @@ export const POST = withTenantContext(async (request: NextRequest) => {
     return NextResponse.json(
       {
         success: true,
-        invoice: {
+        data: {
           id: invoice.id,
           invoiceNumber: invoice.number || 'INV-' + invoice.id.slice(0, 8),
           amount: invoice.totalCents / 100,
