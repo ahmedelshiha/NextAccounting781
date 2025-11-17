@@ -3,6 +3,13 @@ import { withTenantContext } from '@/lib/api-wrapper'
 import { requireTenantContext } from '@/lib/tenant-utils'
 import prisma from '@/lib/prisma'
 import { logger } from '@/lib/logger'
+import { z } from 'zod'
+
+const createInvoiceSchema = z.object({
+  number: z.string().optional(),
+  amount: z.number().positive(),
+  currency: z.string().default('USD'),
+})
 
 export const GET = withTenantContext(async (request: NextRequest) => {
   try {
@@ -47,6 +54,55 @@ export const GET = withTenantContext(async (request: NextRequest) => {
     })
   } catch (error) {
     logger.error('Error fetching invoices', { error })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+})
+
+export const POST = withTenantContext(async (request: NextRequest) => {
+  try {
+    const ctx = requireTenantContext()
+
+    if (!ctx.userId || !ctx.tenantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const data = createInvoiceSchema.parse(body)
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        tenantId: ctx.tenantId,
+        number: data.number,
+        totalCents: Math.round(data.amount * 100),
+        currency: data.currency,
+        status: 'UNPAID',
+      },
+    })
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          id: invoice.id,
+          invoiceNumber: invoice.number || 'INV-' + invoice.id.slice(0, 8),
+          amount: invoice.totalCents / 100,
+          currency: invoice.currency || 'USD',
+          status: 'pending',
+        },
+      },
+      { status: 201 }
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.issues },
+        { status: 400 }
+      )
+    }
+    logger.error('Error creating invoice', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
