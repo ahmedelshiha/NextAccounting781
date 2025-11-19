@@ -115,6 +115,27 @@ export const PERMISSIONS = {
   ENTITIES_READ: 'entities.read',
   ENTITIES_UPDATE: 'entities.update',
   ENTITIES_DELETE: 'entities.delete',
+
+  // Approvals Management
+  APPROVALS_CREATE: 'approvals.create',
+  APPROVALS_READ: 'approvals.read',
+  APPROVALS_RESPOND: 'approvals.respond',
+  APPROVALS_DELETE: 'approvals.delete',
+
+  // Documents Management
+  DOCUMENTS_CREATE: 'documents.create',
+  DOCUMENTS_READ: 'documents.read',
+  DOCUMENTS_DELETE: 'documents.delete',
+  DOCUMENTS_DOWNLOAD: 'documents.download',
+  DOCUMENTS_UPLOAD: 'documents.upload',
+
+  // Invoices Management
+  INVOICES_CREATE: 'invoices.create',
+  INVOICES_READ: 'invoices.read',
+  INVOICES_UPDATE: 'invoices.update',
+  INVOICES_DELETE: 'invoices.delete',
+  INVOICES_SEND: 'invoices.send',
+  INVOICES_PAY: 'invoices.pay',
 } as const
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]
