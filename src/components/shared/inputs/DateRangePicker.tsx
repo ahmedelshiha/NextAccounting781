@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
+import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { SharedComponentProps } from '../types'
@@ -33,7 +33,7 @@ interface DateRangePickerProps extends SharedComponentProps {
 /**
  * DateRangePicker Component
  *
- * Calendar-based date range picker with quick presets.
+ * Date range picker with quick presets.
  * Supports selecting date ranges for filtering, reporting, and booking.
  *
  * @example
@@ -63,7 +63,6 @@ export default function DateRangePicker({
   const [isOpen, setIsOpen] = useState(false)
   const [from, setFrom] = useState<Date | undefined>(value?.from)
   const [to, setTo] = useState<Date | undefined>(value?.to)
-  const [month, setMonth] = useState<Date>(value?.from || new Date())
 
   // Default presets if none provided
   const defaultPresets: Array<{ label: string; range: DateRange }> = presets.length > 0 ? presets : [
@@ -97,25 +96,8 @@ export default function DateRangePicker({
     },
   ]
 
-  const handleDateClick = (date: Date) => {
-    if (!from) {
-      setFrom(date)
-    } else if (!to) {
-      if (date < from) {
-        setTo(from)
-        setFrom(date)
-      } else {
-        setTo(date)
-      }
-      handleApply({ from, to: date })
-    } else {
-      setFrom(date)
-      setTo(undefined)
-    }
-  }
-
-  const handleApply = (range: DateRange) => {
-    onChange?.(range)
+  const handleApply = () => {
+    onChange?.({ from, to })
     setIsOpen(false)
   }
 
@@ -128,15 +110,19 @@ export default function DateRangePicker({
   const handlePreset = (preset: DateRange) => {
     setFrom(preset.from)
     setTo(preset.to)
-    handleApply(preset)
+    onChange?.(preset)
+    setIsOpen(false)
   }
 
   const displayText =
     from && to
-      ? `${formatDate(from, 'MMM d')} - ${formatDate(to, 'MMM d, yyyy')}`
+      ? `${formatDate(from, 'short')} - ${formatDate(to, 'short')}`
       : from
-        ? `${formatDate(from, 'MMM d, yyyy')}`
+        ? formatDate(from, 'short')
         : placeholder
+
+  const fromDate = from ? from.toISOString().split('T')[0] : ''
+  const toDate = to ? to.toISOString().split('T')[0] : ''
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -150,10 +136,10 @@ export default function DateRangePicker({
           {displayText}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="flex">
+      <PopoverContent className="w-auto p-4">
+        <div className="space-y-4">
           {/* Presets */}
-          <div className="flex flex-col gap-2 border-r p-3">
+          <div className="flex flex-wrap gap-2">
             {defaultPresets.map((preset) => (
               <Button
                 key={preset.label}
@@ -161,53 +147,61 @@ export default function DateRangePicker({
                   from?.getTime() === preset.range.from?.getTime() &&
                   to?.getTime() === preset.range.to?.getTime()
                     ? 'default'
-                    : 'ghost'
+                    : 'outline'
                 }
                 size="sm"
                 onClick={() => handlePreset(preset.range)}
-                className="justify-start text-xs"
+                className="text-xs"
               >
                 {preset.label}
               </Button>
             ))}
           </div>
 
-          {/* Calendar */}
-          <div className="p-3">
-            <Calendar
-              mode="range"
-              selected={{ from, to }}
-              onSelect={(range: any) => {
-                if (range?.from) setFrom(range.from)
-                if (range?.to) setTo(range.to)
-              }}
-              month={month}
-              onMonthChange={setMonth}
-              disabled={disabled}
-              className="rounded-md border"
-            />
-
-            {/* Actions */}
-            <div className="mt-3 flex gap-2 border-t pt-3">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleClear}
-                className="flex-1"
-                disabled={!from && !to}
-              >
-                <X className="mr-1 h-3 w-3" />
-                Clear
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleApply({ from, to })}
-                disabled={!from || !to}
-                className="flex-1"
-              >
-                Apply
-              </Button>
+          {/* Date Inputs */}
+          <div className="space-y-2">
+            <div>
+              <label className="text-sm font-medium">From</label>
+              <Input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFrom(e.target.value ? new Date(e.target.value) : undefined)}
+                disabled={disabled}
+                className="mt-1"
+              />
             </div>
+            <div>
+              <label className="text-sm font-medium">To</label>
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => setTo(e.target.value ? new Date(e.target.value) : undefined)}
+                disabled={disabled}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 border-t pt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleClear}
+              className="flex-1"
+              disabled={!from && !to}
+            >
+              <X className="mr-1 h-3 w-3" />
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleApply}
+              className="flex-1"
+              disabled={!from || !to}
+            >
+              Apply
+            </Button>
           </div>
         </div>
       </PopoverContent>

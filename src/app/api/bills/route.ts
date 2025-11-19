@@ -139,7 +139,10 @@ const _api_POST = async (request: NextRequest) => {
     const data = BillCreateSchema.parse(body);
 
     // Create bill
-    const bill = await billsService.createBill(tenantId, userId, data);
+    const bill = await billsService.createBill(tenantId, userId, {
+      ...data,
+      vendor: data.vendor || 'Unknown Vendor',
+    } as any);
 
     return NextResponse.json(
       {

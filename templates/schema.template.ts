@@ -97,257 +97,97 @@ export const ItemCreateSchema = ItemBaseSchema.omit({
   // Add or override fields specific to creation
   // Example: Add required field only on create
   // assigneeId: z.string().cuid('Assignee is required'),
-}).refine(
-  // Custom validation example
-  // (data) => data.priority !== 'URGENT' || data.status === 'ACTIVE',
-  // { message: 'Urgent items must be active' }
-)
-
-export type ItemCreate = z.infer<typeof ItemCreateSchema>
+})
 
 // ============================================================================
 // UPDATE SCHEMA - For PUT/PATCH requests
 // ============================================================================
 
-export const ItemUpdateSchema = ItemBaseSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  tenantId: true,
-}).partial() // All fields optional on update
-.refine(
-  // Custom validation: ensure at least one field is being updated
-  // (data) => Object.values(data).some(v => v !== undefined),
-  // { message: 'At least one field must be updated' }
-)
-
-export type ItemUpdate = z.infer<typeof ItemUpdateSchema>
+export const ItemUpdateSchema = ItemCreateSchema.partial().extend({
+  // Override any fields that should always be provided on update
+})
 
 // ============================================================================
-// FILTER SCHEMA - For GET request query parameters
+// FILTER SCHEMA - For GET query parameters
 // ============================================================================
 
 export const ItemFilterSchema = z.object({
-  // Pagination
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .default(50)
-    .describe('Items per page'),
-
-  offset: z
-    .number()
-    .int()
-    .min(0)
-    .default(0)
-    .describe('Number of items to skip'),
-
-  // Sorting
-  sortBy: z
-    .enum(['name', 'createdAt', 'updatedAt', 'status', 'priority'])
-    .default('createdAt')
-    .optional()
-    .describe('Field to sort by'),
-
-  sortOrder: z
-    .enum(['asc', 'desc'])
-    .default('desc')
-    .optional()
-    .describe('Sort direction'),
-
-  // Filtering
-  search: z
-    .string()
-    .max(255)
-    .optional()
-    .describe('Search term for name/description'),
-
-  status: ItemStatusEnum
-    .optional()
-    .describe('Filter by status'),
-
-  priority: PriorityEnum
-    .optional()
-    .describe('Filter by priority'),
-
-  active: z
-    .boolean()
-    .optional()
-    .describe('Filter by active status'),
-
-  // Date range filtering
-  createdFrom: z
-    .date()
-    .optional()
-    .describe('Filter items created after this date'),
-
-  createdTo: z
-    .date()
-    .optional()
-    .describe('Filter items created before this date'),
-})
-.refine(
-  // Ensure date range is valid
-  // (data) => !data.createdFrom || !data.createdTo || data.createdFrom < data.createdTo,
-  // { message: 'Start date must be before end date' }
-)
-
-export type ItemFilter = z.infer<typeof ItemFilterSchema>
-
-// ============================================================================
-// DETAIL RESPONSE SCHEMA - For single item response
-// ============================================================================
-
-export const ItemDetailSchema = ItemBaseSchema.extend({
-  // Add computed or included fields
-  // Example: Add related data
-  // relatedItems: z.array(ItemBaseSchema).optional(),
-  // assignee: z.object({
-  //   id: z.string(),
-  //   name: z.string(),
-  //   email: z.string().email(),
-  // }).optional(),
+  search: z.string().optional().describe('Search by name or description'),
+  status: z.union([ItemStatusEnum, z.literal('all')]).default('all'),
+  priority: z.union([PriorityEnum, z.literal('all')]).optional(),
+  active: z.enum(['true', 'false', 'all']).default('all').transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
 })
 
-export type ItemDetail = z.infer<typeof ItemDetailSchema>
+// ============================================================================
+// RESPONSE SCHEMAS
+// ============================================================================
 
-// ============================================================================
-// LIST RESPONSE SCHEMA - For paginated response
-// ============================================================================
+export const ItemDetailSchema = ItemBaseSchema
 
 export const ItemListResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.array(ItemDetailSchema),
-  meta: z.object({
-    total: z.number().int().nonnegative(),
-    limit: z.number().int().positive(),
-    offset: z.number().int().nonnegative(),
-    hasMore: z.boolean(),
-  }),
+  items: z.array(ItemDetailSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
 })
-
-export type ItemListResponse = z.infer<typeof ItemListResponseSchema>
-
-// ============================================================================
-// SINGLE ITEM RESPONSE SCHEMA
-// ============================================================================
 
 export const ItemResponseSchema = z.object({
   success: z.boolean(),
   data: ItemDetailSchema,
 })
 
-export type ItemResponse = z.infer<typeof ItemResponseSchema>
-
-// ============================================================================
-// ERROR RESPONSE SCHEMA
-// ============================================================================
-
 export const ErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.object({
     code: z.string(),
     message: z.string(),
-    details: z.array(z.object({
-      field: z.string().optional(),
-      message: z.string(),
-    })).optional(),
   }),
 })
 
+// ============================================================================
+// TYPE EXPORTS - Inferred from schemas
+// ============================================================================
+
+export type ItemCreate = z.infer<typeof ItemCreateSchema>
+export type ItemUpdate = z.infer<typeof ItemUpdateSchema>
+export type ItemFilter = z.infer<typeof ItemFilterSchema>
+export type ItemDetail = z.infer<typeof ItemDetailSchema>
+export type ItemListResponse = z.infer<typeof ItemListResponseSchema>
+export type ItemResponse = z.infer<typeof ItemResponseSchema>
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// USAGE EXAMPLES
 // ============================================================================
 
-/**
- * Validate create data
- * @example
- * ```ts
- * const validated = validateItemCreate(data)
- * ```
- */
-export function validateItemCreate(data: unknown): ItemCreate {
-  return ItemCreateSchema.parse(data)
-}
+/*
+// Create validation
+const createData = ItemCreateSchema.parse({
+  name: 'My Item',
+  description: 'Item description',
+  status: 'ACTIVE',
+})
 
-/**
- * Validate update data
- * @example
- * ```ts
- * const validated = validateItemUpdate(data)
- * ```
- */
-export function validateItemUpdate(data: unknown): ItemUpdate {
-  return ItemUpdateSchema.parse(data)
-}
+// Update validation (partial fields)
+const updateData = ItemUpdateSchema.parse({
+  name: 'Updated Item',
+})
 
-/**
- * Validate filter parameters
- * @example
- * ```ts
- * const filters = validateItemFilters(queryParams)
- * ```
- */
-export function validateItemFilters(data: unknown): ItemFilter {
-  return ItemFilterSchema.parse(data)
-}
+// Query validation
+const filters = ItemFilterSchema.parse({
+  search: 'my',
+  status: 'ACTIVE',
+  limit: '25',
+  offset: '0',
+})
 
-/**
- * Safe validation with error handling
- * @example
- * ```ts
- * const result = safeValidate(ItemCreateSchema, data)
- * if (result.success) {
- *   // use result.data
- * } else {
- *   // handle result.error
- * }
- * ```
- */
-export function safeValidate<T>(schema: z.ZodSchema<T>, data: unknown) {
-  return schema.safeParse(data)
-}
-
-// ============================================================================
-// EXPORTS SUMMARY
-// ============================================================================
-
-/**
- * Export all schemas and types for shared access
- * 
- * Usage:
- * ```ts
- * import { 
- *   ItemCreateSchema, 
- *   ItemUpdateSchema,
- *   ItemFilterSchema,
- *   type ItemCreate,
- *   type ItemUpdate,
- *   type ItemFilter,
- * } from '@/schemas/shared/items'
- * ```
- */
-
-export {
-  ItemCreateSchema,
-  ItemUpdateSchema,
-  ItemFilterSchema,
-  ItemDetailSchema,
-  ItemListResponseSchema,
-  ItemResponseSchema,
-  ErrorResponseSchema,
-}
-
-export type {
-  ItemCreate,
-  ItemUpdate,
-  ItemFilter,
-  ItemDetail,
-  ItemListResponse,
-  ItemResponse,
-  ErrorResponse,
-}
+// Response validation
+const response = ItemResponseSchema.parse({
+  success: true,
+  data: { ... }
+})
+*/
