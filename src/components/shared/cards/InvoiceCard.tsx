@@ -62,8 +62,8 @@ export default function InvoiceCard({
   className = '',
 }: InvoiceCardProps) {
   const { has } = usePermissions()
-  const canDeleteInvoice = has('invoices:delete')
-  const canSendInvoice = has('invoices:send')
+  const canDeleteInvoice = has(PERMISSIONS.INVOICES_DELETE)
+  const canSendInvoice = has(PERMISSIONS.INVOICES_SEND)
 
   if (!invoice) return null
 
