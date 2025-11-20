@@ -1,13 +1,13 @@
 'use client'
 
 import React from 'react'
-import { Task } from '@/types/shared/entities/task'
+import { Task, TaskPriority, TaskStatus } from '@/types/shared/entities/task'
 import { usePermissions } from '@/lib/use-permissions'
 import { PERMISSIONS } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Edit2, Trash2, CheckCircle2, AlertCircle, Clock, User } from 'lucide-react'
+import { Edit2, Trash2, CheckCircle2, Clock, AlertCircle, User } from 'lucide-react'
 import { ComponentVariant, CardComponentProps } from '../types'
 import { formatDate, formatRelativeTime } from '@/lib/shared/formatters'
 
@@ -20,22 +20,24 @@ interface TaskCardProps extends CardComponentProps<Task> {
   onClick?: () => void
   /** Called to edit task */
   onEdit?: (id: string) => void
-  /** Called to delete task */
+  /** Called to delete task (admin) */
   onDelete?: (id: string) => void
-  /** Called to change status (portal: update own) */
-  onStatusChange?: (id: string, status: string) => void
+  /** Called to change status */
+  onStatusChange?: (id: string, status: TaskStatus) => void
   /** Is loading */
   loading?: boolean
   /** Show action buttons */
   showActions?: boolean
+  /** Compact display (no description) */
+  compact?: boolean
 }
 
 /**
  * TaskCard Component
  *
- * Displays task information in a card format.
- * Portal variant: View assigned tasks, update status, add comments
- * Admin variant: Full CRUD, assign team members
+ * Displays task information in a card format with status tracking.
+ * Portal variant: View and manage assigned tasks
+ * Admin variant: Full management of all tasks
  * Compact variant: Minimal display for lists
  *
  * @example
@@ -56,228 +58,207 @@ export default function TaskCard({
   onStatusChange,
   loading = false,
   showActions = true,
+  compact = false,
   className = '',
 }: TaskCardProps) {
   const { has } = usePermissions()
-  const canEditTask = has(PERMISSIONS.TASKS_UPDATE)
+  const canEditTask = has(PERMISSIONS.TASKS_EDIT)
   const canDeleteTask = has(PERMISSIONS.TASKS_DELETE)
-  const canUpdateOwnTask = has(PERMISSIONS.TASKS_UPDATE_OWN)
 
   if (!task) return null
 
-  const statusColors = {
-    OPEN: 'bg-blue-100 text-blue-800',
-    IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-    IN_REVIEW: 'bg-purple-100 text-purple-800',
+  const priorityColors: Record<TaskPriority, string> = {
+    LOW: 'bg-blue-100 text-blue-800',
+    MEDIUM: 'bg-yellow-100 text-yellow-800',
+    HIGH: 'bg-red-100 text-red-800',
+  }
+
+  const statusColors: Record<TaskStatus, string> = {
+    OPEN: 'bg-gray-100 text-gray-700',
+    IN_PROGRESS: 'bg-blue-100 text-blue-800',
+    REVIEW: 'bg-purple-100 text-purple-800',
     COMPLETED: 'bg-green-100 text-green-800',
     BLOCKED: 'bg-red-100 text-red-800',
-    ON_HOLD: 'bg-orange-100 text-orange-800',
-    CANCELLED: 'bg-gray-100 text-gray-800',
   }
 
-  const priorityColors: Record<string, string> = {
-    LOW: 'bg-green-50 text-green-700',
-    NORMAL: 'bg-blue-50 text-blue-700',
-    HIGH: 'bg-orange-50 text-orange-700',
-    URGENT: 'bg-red-50 text-red-700',
-    CRITICAL: 'bg-red-100 text-red-800',
+  const statusIcons: Record<TaskStatus, React.ReactNode> = {
+    OPEN: <Clock className="w-4 h-4" />,
+    IN_PROGRESS: <Clock className="w-4 h-4" />,
+    REVIEW: <AlertCircle className="w-4 h-4" />,
+    COMPLETED: <CheckCircle2 className="w-4 h-4" />,
+    BLOCKED: <AlertCircle className="w-4 h-4" />,
   }
 
-  const dueDate = task.dueDate ? new Date(task.dueDate) : null
-  const isOverdue = dueDate && dueDate < new Date()
+  const isOverdue = task.dueAt && new Date(task.dueAt) < new Date() && task.status !== TaskStatus.COMPLETED
+  const isDueSoon = task.dueAt && !isOverdue && (new Date(task.dueAt).getTime() - new Date().getTime()) < 86400000 * 3
 
-  // Compact variant
-  if (variant === 'compact') {
+  if (compact) {
     return (
       <div
-        className={`flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors cursor-pointer ${className}`}
         onClick={onClick}
-        role="button"
-        tabIndex={0}
-        aria-label={`Task: ${task.title}`}
+        className={`flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition ${className}`}
       >
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{task.title}</p>
-          {dueDate && (
-            <p className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-              Due {formatDate(dueDate, 'short')}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium text-sm">{task.title}</h4>
+            <Badge variant="outline" className={priorityColors[task.priority]}>
+              {task.priority}
+            </Badge>
+          </div>
+          {task.assignee && (
+            <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+              <User className="w-3 h-3" />
+              {task.assignee.name || task.assignee.email}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 ml-2">
-          <Badge className={statusColors[task.status] || 'bg-gray-100 text-gray-800'}>
-            {task.status.replace('_', ' ')}
-          </Badge>
-          {task.priority && (
-            <Badge variant="outline" className={`text-xs ${priorityColors[task.priority]}`}>
-              {task.priority}
-            </Badge>
-          )}
-        </div>
+        <Badge className={statusColors[task.status]}>
+          {task.status}
+        </Badge>
       </div>
     )
   }
 
-  const handleEdit = () => {
-    if (onEdit && canEditTask && !loading) {
-      onEdit(task.id)
-    }
-  }
-
-  const handleDelete = () => {
-    if (onDelete && canDeleteTask && !loading) {
-      onDelete(task.id)
-    }
-  }
-
-  const handleStatusChange = (newStatus: string) => {
-    if (onStatusChange && (canEditTask || canUpdateOwnTask) && !loading) {
-      onStatusChange(task.id, newStatus)
-    }
-  }
-
   return (
-    <Card
-      className={`overflow-hidden transition-all hover:shadow-md cursor-pointer ${className}`}
-      onClick={onClick}
-      role="article"
-      aria-label={`Task: ${task.title}`}
-    >
+    <Card className={`hover:shadow-md transition ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              {task.status === 'COMPLETED' ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-              ) : task.status === 'BLOCKED' ? (
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-              ) : null}
-              <CardTitle className="truncate">{task.title}</CardTitle>
-            </div>
-            {task.description && (
-              <CardDescription className="text-xs mt-1">{task.description}</CardDescription>
+          <div className="flex-1">
+            <CardTitle className="text-lg">{task.title}</CardTitle>
+            {!compact && task.description && (
+              <CardDescription className="mt-2 line-clamp-2">{task.description}</CardDescription>
             )}
           </div>
-          <Badge className={statusColors[task.status] || 'bg-gray-100 text-gray-800'}>
-            {task.status.replace('_', ' ')}
-          </Badge>
+          {showActions && variant === 'admin' && canDeleteTask && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onDelete?.(task.id)}
+              disabled={loading}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Priority & Due Date */}
-        <div className="flex items-center gap-4 text-sm">
-          {task.priority && (
-            <div className="flex items-center gap-1">
-              <Badge variant="outline" className={priorityColors[task.priority]}>
-                {task.priority}
-              </Badge>
-            </div>
+        {/* Task Meta */}
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className={priorityColors[task.priority]}>
+            {task.priority} Priority
+          </Badge>
+          <Badge
+            className={`${statusColors[task.status]} ${isOverdue ? 'animate-pulse' : ''}`}
+          >
+            <span className="flex items-center gap-1">
+              {statusIcons[task.status]}
+              {task.status}
+            </span>
+          </Badge>
+          {isOverdue && (
+            <Badge variant="destructive">
+              Overdue
+            </Badge>
           )}
-          {dueDate && (
-            <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-700'}`}>
-              <Clock className="h-4 w-4" />
-              <span>{formatDate(dueDate, 'short')}</span>
-              {isOverdue && <span className="text-xs">(overdue)</span>}
-            </div>
+          {isDueSoon && !isOverdue && (
+            <Badge variant="secondary">
+              Due Soon
+            </Badge>
           )}
         </div>
+
+        {/* Due Date */}
+        {task.dueAt && (
+          <div className="text-sm text-gray-600 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Due {formatDate(new Date(task.dueAt))}
+            {' '}
+            <span className="text-xs text-gray-500">
+              ({formatRelativeTime(new Date(task.dueAt))})
+            </span>
+          </div>
+        )}
 
         {/* Assignee */}
         {task.assignee && (
-          <div className="flex items-center gap-2 text-sm text-gray-700 pt-2 border-t">
-            <User className="h-4 w-4 flex-shrink-0" />
-            <div>
-              <p className="font-medium">{task.assignee.name}</p>
-              <p className="text-xs text-gray-500">Assigned to</p>
-            </div>
+          <div className="text-sm text-gray-600 flex items-center gap-2">
+            <User className="w-4 h-4" />
+            <span>
+              Assigned to{' '}
+              <strong>
+                {task.assignee.name || task.assignee.email}
+              </strong>
+            </span>
+            {task.assignee.department && (
+              <span className="text-xs text-gray-500">
+                ({task.assignee.department})
+              </span>
+            )}
           </div>
         )}
 
-        {/* Progress (if applicable) */}
-        {task.completionPercentage != null && (
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-gray-600">Progress</span>
-              <span className="font-medium">{task.completionPercentage}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${task.completionPercentage}%` }}
-                role="progressbar"
-                aria-valuenow={task.completionPercentage}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              />
-            </div>
+        {/* Compliance Badge */}
+        {task.complianceRequired && (
+          <div className="p-2 bg-yellow-50 border border-yellow-200 rounded flex items-center gap-2 text-sm">
+            <AlertCircle className="w-4 h-4 text-yellow-600" />
+            <span className="text-yellow-800">
+              Compliance Required
+              {task.complianceDeadline && (
+                <>
+                  {' '}
+                  by {formatDate(new Date(task.complianceDeadline))}
+                </>
+              )}
+            </span>
           </div>
         )}
 
-        {/* Description (full) */}
-        {task.description && variant === 'admin' && (
-          <div className="pt-2 border-t">
-            <p className="text-sm text-gray-600 line-clamp-3">{task.description}</p>
-          </div>
-        )}
-
-        {/* Status Select (Portal) */}
-        {variant === 'portal' && showActions && (
-          <div className="pt-2 border-t">
-            <label className="text-xs font-medium text-gray-600 mb-1 block">Change Status</label>
-            <select
-              value={task.status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="w-full px-2 py-1 text-sm border rounded-md"
-              disabled={loading}
-              aria-label="Change task status"
-            >
-              <option value="OPEN">Open</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="IN_REVIEW">In Review</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="BLOCKED">Blocked</option>
-            </select>
-          </div>
-        )}
-
-        {/* Actions (Admin) */}
-        {variant === 'admin' && showActions && (
-          <div className="pt-2 border-t flex gap-2">
+        {/* Actions */}
+        {showActions && variant === 'admin' && canEditTask && (
+          <div className="flex gap-2 pt-2 border-t">
             <Button
               size="sm"
               variant="outline"
-              onClick={handleEdit}
-              disabled={!canEditTask || loading}
+              onClick={() => onEdit?.(task.id)}
+              disabled={loading}
               className="flex-1"
-              aria-label={`Edit task ${task.id.slice(0, 8)}`}
             >
-              <Edit2 className="h-4 w-4 mr-1" />
+              <Edit2 className="w-4 h-4 mr-2" />
               Edit
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleDelete}
-              disabled={!canDeleteTask || loading}
-              className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-              aria-label={`Delete task ${task.id.slice(0, 8)}`}
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
+          </div>
+        )}
+
+        {/* Portal User Actions */}
+        {showActions && variant === 'portal' && task.status !== TaskStatus.COMPLETED && (
+          <div className="flex gap-2 pt-2 border-t">
+            {task.status !== TaskStatus.IN_PROGRESS && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onStatusChange?.(task.id, TaskStatus.IN_PROGRESS)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Start
+              </Button>
+            )}
+            {task.status === TaskStatus.IN_PROGRESS && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onStatusChange?.(task.id, TaskStatus.COMPLETED)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Mark Complete
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
-
-      {/* Footer - Created/Updated info */}
-      {task.createdAt && (
-        <div className="px-6 py-2 bg-gray-50 text-xs text-gray-500 border-t">
-          {task.status === 'COMPLETED' && task.updatedAt
-            ? `Completed ${formatRelativeTime(new Date(task.updatedAt))}`
-            : `Created ${formatRelativeTime(new Date(task.createdAt))}`}
-        </div>
-      )}
     </Card>
   )
 }
