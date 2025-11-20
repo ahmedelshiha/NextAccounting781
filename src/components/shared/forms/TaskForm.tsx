@@ -1,326 +1,375 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Task } from '@/types/shared/entities/task'
-import { TaskCreateSchema, TaskUpdateSchema } from '@/schemas/shared/task'
-import { FormComponentProps } from '../types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Task, TaskPriority, TaskStatus } from '@/types/shared/entities/task'
+import { TaskCreateSchema, TaskUpdateSchema } from '@/schemas/shared/entities/task'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { usePermissions } from '@/lib/use-permissions'
-import { PERMISSIONS } from '@/lib/permissions'
-import { AlertCircle, Loader2, Save, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
-interface TaskFormProps extends FormComponentProps<Task> {
-  /** Task to edit (if editing) */
-  initialData?: Partial<Task>
-  /** Called when form is submitted */
-  onSubmit: (data: any) => void | Promise<void>
-  /** Whether form is submitting */
-  isSubmitting?: boolean
-  /** Error message from submission */
-  submitError?: string
-  /** Display variant - admin can assign, portal cannot */
-  variant?: 'portal' | 'admin'
+interface TaskFormProps {
+  /** Initial task data for edit mode */
+  initialData?: Task
+  /** Called on successful submission */
+  onSubmit?: (task: Task) => void | Promise<void>
+  /** Called on cancel */
+  onCancel?: () => void
+  /** Available users for assignment */
+  assignees?: Array<{ id: string; name?: string; email: string; department?: string }>
+  /** Is the form in loading state */
+  isLoading?: boolean
+  /** Form mode: create or edit */
+  mode?: 'create' | 'edit'
 }
 
 /**
  * TaskForm Component
  *
- * Form for creating and editing tasks.
- * Admin variant: Full control - assign to team, set priorities, manage status
- * Portal variant: Limited - update own task status, add notes
+ * Form for creating and editing tasks with full validation.
+ * Supports priority selection, due date picking, and assignee selection.
  *
  * @example
  * ```tsx
- * // Admin: Create task and assign to team
- * <TaskForm
- *   variant="admin"
- *   onSubmit={handleSubmit}
- * />
+ * // Create mode
+ * <TaskForm mode="create" assignees={users} onSubmit={handleCreate} />
  *
- * // Portal: Update own task
- * <TaskForm
- *   variant="portal"
- *   initialData={myTask}
- *   onSubmit={handleSubmit}
- * />
+ * // Edit mode
+ * <TaskForm mode="edit" initialData={task} onSubmit={handleUpdate} />
  * ```
  */
 export default function TaskForm({
   initialData,
   onSubmit,
-  isSubmitting = false,
-  submitError,
-  variant = 'admin',
-  className,
+  onCancel,
+  assignees = [],
+  isLoading = false,
+  mode = initialData ? 'edit' : 'create',
 }: TaskFormProps) {
-  const { has } = usePermissions()
-  const isAdmin = variant === 'admin' && has(PERMISSIONS.TASKS_CREATE)
-  const isEditing = !!initialData?.id
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Determine which schema to use
-  const schema = isEditing ? TaskUpdateSchema : TaskCreateSchema
+  const schema = mode === 'edit' ? TaskUpdateSchema : TaskCreateSchema
+  const defaultValues = initialData || {
+    title: '',
+    description: '',
+    priority: TaskPriority.MEDIUM,
+    dueAt: undefined,
+    assigneeId: undefined,
+    complianceRequired: false,
+    complianceDeadline: undefined,
+  }
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: {
-      title: initialData?.title || '',
-      description: initialData?.description || '',
-      status: initialData?.status || 'OPEN',
-      priority: initialData?.priority || 'NORMAL',
-      dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
-      assigneeId: initialData?.assigneeId || '',
-      tags: (initialData?.tags as string[]) || [],
-      estimatedHours: initialData?.estimatedHours || undefined,
-    },
+    defaultValues,
+    mode: 'onChange',
   })
 
-  const onSubmitHandler = async (data: any) => {
-    if (data.dueDate) {
-      data.dueDate = new Date(`${data.dueDate}T00:00:00`)
+  async function handleFormSubmit(data: any) {
+    try {
+      setIsSubmitting(true)
+
+      // Make API call based on mode
+      const endpoint = mode === 'edit' ? `/api/tasks/${initialData?.id}` : `/api/tasks`
+      const method = mode === 'edit' ? 'PUT' : 'POST'
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error?.message || `Failed to ${mode} task`)
+      }
+
+      const result = await response.json()
+      toast.success(`Task ${mode === 'edit' ? 'updated' : 'created'} successfully`)
+      await onSubmit?.(result.data)
+    } catch (error) {
+      console.error(`Task ${mode} error:`, error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit task')
+    } finally {
+      setIsSubmitting(false)
     }
-    await onSubmit(data)
   }
 
   return (
-    <div className={className}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? 'Edit Task' : 'Create Task'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {submitError && (
-            <div className="mb-6 flex gap-2 rounded-md bg-red-50 p-4 text-red-900">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm">{submitError}</p>
-            </div>
-          )}
+    <Card className="w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle>
+          {mode === 'edit' ? 'Edit Task' : 'Create New Task'}
+        </CardTitle>
+        <CardDescription>
+          {mode === 'edit'
+            ? 'Update task details and assignment'
+            : 'Create a new task and assign it to a team member'}
+        </CardDescription>
+      </CardHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-6">
-              {/* Task Title and Description */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Task Details</h3>
-
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Task Title *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Prepare tax return"
-                          {...field}
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Detailed task description..."
-                          className="resize-none"
-                          rows={3}
-                          {...field}
-                          value={field.value || ''}
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Status and Priority */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Task Status</h3>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="OPEN">Open</SelectItem>
-                            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                            <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                            <SelectItem value="COMPLETED">Completed</SelectItem>
-                            <SelectItem value="BLOCKED">Blocked</SelectItem>
-                            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Priority</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting || !isAdmin}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="LOW">Low</SelectItem>
-                            <SelectItem value="MEDIUM">Medium</SelectItem>
-                            <SelectItem value="HIGH">High</SelectItem>
-                            <SelectItem value="URGENT">Urgent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Scheduling */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Scheduling</h3>
-
-                <FormField
-                  control={form.control}
-                  name="dueAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Due Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {isAdmin && (
-                  <FormField
-                    control={form.control}
-                    name="estimatedHours"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Estimated Hours</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.5"
-                            placeholder="2.5"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormDescription>Time estimate for completing this task</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-
-              {/* Assignment (Admin Only) */}
-              {isAdmin && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Assignment</h3>
-
-                  <FormField
-                    control={form.control}
-                    name="assigneeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assign To</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select team member" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="user-1">Alice Johnson</SelectItem>
-                            <SelectItem value="user-2">Bob Williams</SelectItem>
-                            <SelectItem value="user-3">Carol Davis</SelectItem>
-                            <SelectItem value="user-4">David Martinez</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Team member responsible for this task</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="parentTaskId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Parent Task</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isSubmitting}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="No parent task (standalone)" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="">No parent task</SelectItem>
-                            <SelectItem value="task-1">Q4 Tax Preparation</SelectItem>
-                            <SelectItem value="task-2">Annual Audit</SelectItem>
-                            <SelectItem value="task-3">Compliance Check</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>Link this as a subtask (optional)</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+            {/* Title */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Title *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter task title"
+                      disabled={isSubmitting || isLoading}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A clear, concise title for the task
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
 
-              {/* Form Actions */}
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" disabled={isSubmitting} className="gap-2">
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Task' : 'Create Task'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value || ''}
+                      placeholder="Enter detailed task description"
+                      rows={4}
+                      disabled={isSubmitting || isLoading}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Provide details about what needs to be done
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Priority */}
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={isSubmitting || isLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={TaskPriority.LOW}>
+                        Low
+                      </SelectItem>
+                      <SelectItem value={TaskPriority.MEDIUM}>
+                        Medium
+                      </SelectItem>
+                      <SelectItem value={TaskPriority.HIGH}>
+                        High
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Set the priority level for this task
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Assignee */}
+            {assignees.length > 0 && (
+              <FormField
+                control={form.control}
+                name="assigneeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign To</FormLabel>
+                    <Select
+                      value={field.value || ''}
+                      onValueChange={field.onChange}
+                      disabled={isSubmitting || isLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select assignee" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Unassigned</SelectItem>
+                        {assignees.map((assignee) => (
+                          <SelectItem key={assignee.id} value={assignee.id}>
+                            {assignee.name || assignee.email}
+                            {assignee.department && (
+                              <span className="text-xs text-gray-600">
+                                {' '}
+                                ({assignee.department})
+                              </span>
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Assign this task to a team member
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Due Date */}
+            <FormField
+              control={form.control}
+              name="dueAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="datetime-local"
+                      {...field}
+                      value={
+                        field.value
+                          ? new Date(field.value).toISOString().slice(0, 16)
+                          : ''
+                      }
+                      onChange={(e) => {
+                        field.onChange(
+                          e.target.value ? new Date(e.target.value) : null
+                        )
+                      }}
+                      disabled={isSubmitting || isLoading}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Set a due date for task completion
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Compliance */}
+            <FormField
+              control={form.control}
+              name="complianceRequired"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isSubmitting || isLoading}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Compliance Required</FormLabel>
+                    <FormDescription>
+                      This task requires compliance verification
+                    </FormDescription>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Compliance Deadline */}
+            {form.watch('complianceRequired') && (
+              <FormField
+                control={form.control}
+                name="complianceDeadline"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Compliance Deadline</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="datetime-local"
+                        {...field}
+                        value={
+                          field.value
+                            ? new Date(field.value).toISOString().slice(0, 16)
+                            : ''
+                        }
+                        onChange={(e) => {
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null
+                          )
+                        }}
+                        disabled={isSubmitting || isLoading}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Deadline for compliance verification
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting || isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || isLoading}
+              >
+                {(isSubmitting || isLoading) && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {mode === 'edit' ? 'Update Task' : 'Create Task'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   )
 }
