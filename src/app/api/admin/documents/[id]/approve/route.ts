@@ -145,8 +145,11 @@ export const POST = withAdminAuth(async (request, context) => {
  * GET /api/admin/documents/[id]/approve
  * Get approval status
  */
-export const GET = withAdminAuth(async (request, { tenantId, user }, { params }) => {
+export const GET = withAdminAuth(async (request, context) => {
   try {
+    const tenantId = (request as any).tenantId
+    const params = context?.params || {}
+
     const document = await prisma.attachment.findFirst({
       where: {
         id: params.id,
