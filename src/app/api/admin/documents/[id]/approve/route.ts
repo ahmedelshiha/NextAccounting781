@@ -72,7 +72,7 @@ export const POST = withAdminAuth(async (request, context) => {
       data: {
         avStatus: approved ? 'approved' : 'rejected',
         metadata: {
-          ...document.metadata,
+          ...(typeof document.metadata === 'object' && document.metadata !== null ? document.metadata : {}),
           approval: {
             approved,
             approvedBy: userId,
