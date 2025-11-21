@@ -447,8 +447,9 @@ export default function LocalizationContent() {
       await loadLanguages()
       toast.success('Language updated')
     } catch (e: unknown) {
-      setError(e?.message || 'Failed to update language')
-      toast.error(e?.message || 'Failed to update language')
+      const error = e instanceof Error ? e.message : String(e)
+      setError(error || 'Failed to update language')
+      toast.error(error || 'Failed to update language')
     } finally {
       setSaving(false)
     }
@@ -466,8 +467,9 @@ export default function LocalizationContent() {
       await loadLanguages()
       toast.success('Language status updated')
     } catch (e: unknown) {
-      setError(e?.message)
-      toast.error(e?.message)
+      const error = e instanceof Error ? e.message : String(e)
+      setError(error)
+      toast.error(error)
     } finally {
       setSaving(false)
     }
@@ -488,8 +490,9 @@ export default function LocalizationContent() {
       await loadLanguages()
       toast.success('Language deleted')
     } catch (e: unknown) {
-      setError(e?.message)
-      toast.error(e?.message)
+      const error = e instanceof Error ? e.message : String(e)
+      setError(error)
+      toast.error(error)
     } finally {
       setSaving(false)
     }
@@ -1316,7 +1319,7 @@ export default function LocalizationContent() {
                         </div>
 
                         <div className="space-y-3">
-                          {analyticsData.distribution.map((item: { language: string; count: number }, idx: number) => (
+                          {analyticsData.distribution.map((item: { language: string; count: number; percentage?: number }, idx: number) => (
                             <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                               <div className="flex items-center gap-3">
                                 <div

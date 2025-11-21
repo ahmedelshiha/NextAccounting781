@@ -340,7 +340,7 @@ export default function AdminTasksPage() {
       {error && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6">
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700">{error instanceof Error ? error.message : String(error)}</p>
           </CardContent>
         </Card>
       )}
