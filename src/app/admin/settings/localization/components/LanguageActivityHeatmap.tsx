@@ -24,7 +24,7 @@ type LanguageActivityResponse = {
   periods: HeatmapPeriod[]
   dateRange: { start: string; end: string }
   summary: { totalSessions: number; totalUsers: number; languagesTracked: number }
-  meta?: any
+  meta?: Record<string, unknown>
 }
 import { debounce } from '../utils/performance'
 
