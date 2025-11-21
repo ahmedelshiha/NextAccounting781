@@ -152,6 +152,7 @@ export const POST = withTenantContext(
         data: {
           ...input,
           tenantId,
+          createdById: user.id,
         },
         include: {
           assignee: {
