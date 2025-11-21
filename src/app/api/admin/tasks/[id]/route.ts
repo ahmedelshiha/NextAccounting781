@@ -4,6 +4,7 @@ import { respond } from '@/lib/api-response'
 import { TaskUpdateSchema } from '@/schemas/shared/entities/task'
 import prisma from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
+import { requireTenantContext } from '@/lib/tenant-utils'
 import { z } from 'zod'
 
 /**
@@ -11,10 +12,13 @@ import { z } from 'zod'
  * Get task details with comments (admin only)
  */
 export const GET = withTenantContext(
-  async (request, { user, tenantId }, { params }) => {
+  async (request, { params }) => {
     try {
+      const ctx = requireTenantContext()
+      const { tenantId, userId, role, tenantRole } = ctx
+
       // Verify admin access
-      if (!user.isAdmin) {
+      if (role !== 'SUPER_ADMIN' && !tenantRole?.includes('ADMIN')) {
         return respond.forbidden('Only administrators can access this endpoint')
       }
 
