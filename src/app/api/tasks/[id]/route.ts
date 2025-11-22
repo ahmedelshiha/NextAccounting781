@@ -210,12 +210,12 @@ export const DELETE = withTenantContext(
 
       // Log audit event before deletion
       await logAudit({
-        tenantId,
-        userId: ctx.userId,
+        tenantId: tenantId as string,
+        userId: ctx.userId as string,
         action: 'TASK_DELETED',
-        entity: 'Task',
-        entityId: taskId,
-        changes: {
+        resource: 'Task',
+        metadata: {
+          taskId,
           title: task.title,
           status: task.status,
         },
