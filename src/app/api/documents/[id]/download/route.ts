@@ -18,7 +18,7 @@ export const GET = withTenantContext(async (request: NextRequest, { params }: an
     const document = await prisma.attachment.findFirst({
       where: {
         id: params.id,
-        tenantId,
+        tenantId: tenantId as string,
       },
       include: {
         uploader: {
