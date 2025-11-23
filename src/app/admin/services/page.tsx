@@ -39,7 +39,7 @@ const fetcher = async (url: string) => {
       ? json
       : (Array.isArray(json?.services) ? json.services : (Array.isArray(json?.items) ? json.items : []))
     const total = typeof json?.total === 'number' ? json.total : services.length
-    const analytics = json?.analytics ? { ...defaultAnalytics, ...json.analytics } : null
+    const analytics = json?.analytics ? { ...defaultAnalytics, ...json.analytics } as ServiceAnalytics : null
     return { services, total, analytics }
   } catch {
     return { services: [], total: 0, analytics: null }
