@@ -25,7 +25,7 @@ export const GET = withTenantContext(
     try {
       const ctx = requireTenantContext()
       const profile = await prisma.user.findUnique({
-        where: { id: ctx.userId },
+        where: { id: ctx.userId ?? undefined },
         select: {
           id: true,
           email: true,
@@ -49,7 +49,6 @@ export const GET = withTenantContext(
         data: profile,
       })
     } catch (error) {
-      console.error('Get profile error:', error)
       return respond.serverError()
     }
   },
@@ -74,7 +73,7 @@ export const PUT = withTenantContext(
 
       // Update profile
       const updated = await prisma.user.update({
-        where: { id: ctx.userId },
+        where: { id: ctx.userId ?? undefined },
         data: {
           name: input.name,
           image: input.image,
@@ -113,7 +112,6 @@ export const PUT = withTenantContext(
       if (error instanceof z.ZodError) {
         return respond.badRequest('Invalid input', error.errors)
       }
-      console.error('Update profile error:', error)
       return respond.serverError()
     }
   },

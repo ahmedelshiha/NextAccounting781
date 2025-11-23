@@ -17,10 +17,6 @@ export async function POST(req: NextRequest) {
 
     // Log webhook event
     const event = body.event || 'unknown'
-    console.log(`[Crowdin Webhook] Event: ${event}`, {
-      timestamp: new Date().toISOString(),
-      eventData: JSON.stringify(body).substring(0, 200),
-    })
 
     // Handle different webhook event types
     switch (event) {
@@ -49,12 +45,6 @@ export async function POST(req: NextRequest) {
 }
 
 async function handleTranslationCompleted(data: any) {
-  console.log('[Webhook] Translation completed', {
-    language: data.language,
-    progress: data.progress,
-    timestamp: new Date().toISOString(),
-  })
-
   return Response.json({
     success: true,
     message: 'Translation completion processed',
@@ -62,12 +52,6 @@ async function handleTranslationCompleted(data: any) {
 }
 
 async function handleFileTranslated(data: any) {
-  console.log('[Webhook] File translated', {
-    fileId: data.fileId,
-    language: data.language,
-    timestamp: new Date().toISOString(),
-  })
-
   return Response.json({
     success: true,
     message: 'File translation processed',
@@ -75,12 +59,6 @@ async function handleFileTranslated(data: any) {
 }
 
 async function handleProjectTranslated(data: any) {
-  console.log('[Webhook] Project translated', {
-    projectId: data.projectId,
-    language: data.language,
-    timestamp: new Date().toISOString(),
-  })
-
   return Response.json({
     success: true,
     message: 'Project translation processed',

@@ -47,17 +47,7 @@ const _api_POST = async (request: NextRequest) => {
       type: payload.type ?? 'unknown',
     }
 
-    // In development, just log the metrics
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Admin Performance Metric:', {
-        type: normalizedPayload.type,
-        path: normalizedPayload.path,
-        metrics: normalizedPayload.metrics,
-        timestamp: new Date(normalizedPayload.ts).toISOString(),
-        userAgent: normalizedPayload.userAgent?.substring(0, 50),
-      })
-    }
-
+    // In development, metrics are acknowledged but not logged
     // In production, you could:
     // 1. Store in database for analytics
     // 2. Send to external analytics service (DataDog, New Relic, etc.)

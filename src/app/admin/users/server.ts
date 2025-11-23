@@ -85,8 +85,6 @@ export async function fetchUsersServerSide(
       status: 'ACTIVE' as const
     }))
 
-    console.log(`[fetchUsersServerSide] Successfully fetched ${mapped.length} users for tenant ${tenantId}`)
-
     return {
       users: mapped,
       total,
@@ -164,8 +162,6 @@ export async function fetchStatsServerSide(tenantId: string): Promise<UserStats>
     ])
 
     const growth = newLastMonth > 0 ? ((newThisMonth - newLastMonth) / newLastMonth) * 100 : 0
-
-    console.log(`[fetchStatsServerSide] Fetched stats for tenant ${tenantId}: ${total} total users, ${active} active`)
 
     return {
       total,
