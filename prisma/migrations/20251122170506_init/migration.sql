@@ -340,7 +340,8 @@ EXCEPTION
 END $$;
 
 -- CreateTable
-CREATE TABLE "invitations" (
+DO $$ BEGIN
+    CREATE TABLE "invitations" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
@@ -356,10 +357,14 @@ CREATE TABLE "invitations" (
     "entityIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
 
     CONSTRAINT "invitations_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "user_profiles" (
+DO $$ BEGIN
+    CREATE TABLE "user_profiles" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "organization" TEXT,
@@ -385,10 +390,14 @@ CREATE TABLE "user_profiles" (
     "timezone" TEXT DEFAULT 'UTC',
 
     CONSTRAINT "user_profiles_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "filter_presets" (
+DO $$ BEGIN
+    CREATE TABLE "filter_presets" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -402,10 +411,14 @@ CREATE TABLE "filter_presets" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "filter_presets_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "preset_shares" (
+DO $$ BEGIN
+    CREATE TABLE "preset_shares" (
     "id" TEXT NOT NULL,
     "presetId" TEXT NOT NULL,
     "ownerId" TEXT NOT NULL,
@@ -417,10 +430,14 @@ CREATE TABLE "preset_shares" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "preset_shares_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "preset_share_logs" (
+DO $$ BEGIN
+    CREATE TABLE "preset_share_logs" (
     "id" TEXT NOT NULL,
     "presetId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -430,10 +447,14 @@ CREATE TABLE "preset_share_logs" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "preset_share_logs_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "accounts" (
+DO $$ BEGIN
+    CREATE TABLE "accounts" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -448,17 +469,24 @@ CREATE TABLE "accounts" (
     "session_state" TEXT,
 
     CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "sessions" (
+DO $$ BEGIN
+    CREATE TABLE "sessions" (
     "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
 CREATE TABLE "verificationtokens" (
