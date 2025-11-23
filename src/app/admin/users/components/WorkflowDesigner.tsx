@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle, CheckCircle, Play, Save, Send } from 'lucide-react'
-import { Workflow, WorkflowNode, WorkflowSimulation, workflowDesignerService } from '@/services/workflow-designer.service'
+import { Workflow, WorkflowNode, WorkflowSimulation, NodeType, workflowDesignerService } from '@/services/workflow-designer.service'
 import { NodeLibrary } from './NodeLibrary'
 import { WorkflowCanvas } from './WorkflowCanvas'
 import { WorkflowSimulator } from './WorkflowSimulator'
