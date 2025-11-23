@@ -11,7 +11,7 @@ interface UsersTableProps {
   isLoading?: boolean
   onViewProfile: (user: UserItem) => void
   onRoleChange?: (userId: string, role: UserItem['role']) => Promise<void>
-  onEditInline?: (userId: string, field: string, value: any) => void
+  onEditInline?: (userId: string, field: string, value: unknown) => void
   onDeleteUser?: (userId: string) => Promise<void>
   onResetPassword?: (email: string) => Promise<void>
   isUpdating?: boolean
@@ -62,12 +62,10 @@ export const UsersTable = memo(function UsersTable({
   }, [allSelected, onSelectAll])
 
   const handleEditInline = useCallback(
-    (userId: string, field: string, value: any) => {
+    (userId: string, field: string, value: unknown) => {
       // Delegate to prop if provided
       if (onEditInlineProp) {
-        try { onEditInlineProp(userId, field, value) } catch (e) { console.error(e) }
-      } else {
-        console.log(`Edit user ${userId}, field ${field}:`, value)
+        try { onEditInlineProp(userId, field, value) } catch (e) { /* Handle error silently */ }
       }
     },
     [onEditInlineProp]
