@@ -5,7 +5,7 @@ import { useState, useCallback } from 'react'
 export interface BulkActionPayload {
   userIds: string[]
   action: string
-  value: any
+  value: unknown
 }
 
 export interface DryRunResult {
