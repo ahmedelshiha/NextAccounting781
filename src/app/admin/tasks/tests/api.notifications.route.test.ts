@@ -28,8 +28,8 @@ describe('api/admin/tasks/notifications route', () => {
 
     const patchRes: Response = await (mod.PATCH as Function)(new Request('https://x', { method: 'PATCH', body: JSON.stringify({ emailEnabled: true, emailFrom: 'noreply@example.com' }) }))
     expect(patchRes.status).toBe(200)
-    const updated = await patchRes.json()
-    expect(updated.emailEnabled).toBe(true)
-    expect(updated.emailFrom).toBe('noreply@example.com')
+    const updated: Record<string, unknown> = await patchRes.json()
+    expect((updated as any).emailEnabled).toBe(true)
+    expect((updated as any).emailFrom).toBe('noreply@example.com')
   })
 })
