@@ -182,7 +182,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
               </CardHeader>
               <CardContent>
                 <PresetAdoptionPanel
-                  metrics={(presetMetrics || {}) as Record<string, unknown>}
+                  metrics={(presetMetrics || {}) as unknown as Record<string, unknown>}
                   isLoading={isLoading}
                 />
               </CardContent>
