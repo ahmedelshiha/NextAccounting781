@@ -1253,7 +1253,8 @@ EXCEPTION
 END $$;
 
 -- CreateTable
-CREATE TABLE "booking_settings" (
+DO $$ BEGIN
+    CREATE TABLE "booking_settings" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
     "bookingEnabled" BOOLEAN NOT NULL DEFAULT true,
@@ -1319,10 +1320,14 @@ CREATE TABLE "booking_settings" (
     "updatedBy" TEXT,
 
     CONSTRAINT "booking_settings_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "booking_step_config" (
+DO $$ BEGIN
+    CREATE TABLE "booking_step_config" (
     "id" TEXT NOT NULL,
     "bookingSettingsId" TEXT NOT NULL,
     "stepName" TEXT NOT NULL,
@@ -1336,10 +1341,14 @@ CREATE TABLE "booking_step_config" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "booking_step_config_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "business_hours_config" (
+DO $$ BEGIN
+    CREATE TABLE "business_hours_config" (
     "id" TEXT NOT NULL,
     "bookingSettingsId" TEXT NOT NULL,
     "dayOfWeek" INTEGER NOT NULL,
@@ -1351,10 +1360,14 @@ CREATE TABLE "business_hours_config" (
     "maxBookingsPerHour" INTEGER NOT NULL DEFAULT 4,
 
     CONSTRAINT "business_hours_config_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "payment_method_config" (
+DO $$ BEGIN
+    CREATE TABLE "payment_method_config" (
     "id" TEXT NOT NULL,
     "bookingSettingsId" TEXT NOT NULL,
     "methodType" TEXT NOT NULL,
@@ -1367,10 +1380,14 @@ CREATE TABLE "payment_method_config" (
     "gatewayConfig" JSONB,
 
     CONSTRAINT "payment_method_config_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "notification_templates" (
+DO $$ BEGIN
+    CREATE TABLE "notification_templates" (
     "id" TEXT NOT NULL,
     "bookingSettingsId" TEXT NOT NULL,
     "templateType" TEXT NOT NULL,
@@ -1381,10 +1398,14 @@ CREATE TABLE "notification_templates" (
     "variables" JSONB,
 
     CONSTRAINT "notification_templates_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "user_payment_methods" (
+DO $$ BEGIN
+    CREATE TABLE "user_payment_methods" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
@@ -1403,10 +1424,14 @@ CREATE TABLE "user_payment_methods" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "user_payment_methods_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "banking_connections" (
+DO $$ BEGIN
+    CREATE TABLE "banking_connections" (
     "id" TEXT NOT NULL,
     "tenantId" TEXT NOT NULL,
     "entityId" TEXT,
@@ -1425,7 +1450,10 @@ CREATE TABLE "banking_connections" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "banking_connections_pkey" PRIMARY KEY ("id")
-);
+    );
+EXCEPTION
+    WHEN duplicate_table THEN null;
+END $$;
 
 -- CreateTable
 CREATE TABLE "banking_transactions" (
