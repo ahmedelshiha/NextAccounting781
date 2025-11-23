@@ -108,7 +108,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
             </CardHeader>
             <CardContent>
               <MostUsedFiltersChart
-                stats={filterUsageStats.slice(0, 5)}
+                stats={filterUsageStats.slice(0, 5) as Record<string, unknown>[]}
                 isLoading={isLoading}
               />
             </CardContent>
@@ -125,7 +125,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
               </CardHeader>
               <CardContent>
                 <FilterCombinationsTable
-                  combinations={filterCombinations.slice(0, 5)}
+                  combinations={filterCombinations.slice(0, 5) as Record<string, unknown>[]}
                   isLoading={isLoading}
                 />
               </CardContent>
@@ -146,7 +146,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
               </CardHeader>
               <CardContent>
                 <UserEngagementTable
-                  metrics={userEngagementMetrics}
+                  metrics={userEngagementMetrics as Record<string, unknown>[]}
                   isLoading={isLoading}
                 />
               </CardContent>
@@ -164,7 +164,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
               </CardHeader>
               <CardContent>
                 <PerformanceMetricsPanel
-                  metrics={performanceMetrics}
+                  metrics={(performanceMetrics || {}) as Record<string, unknown>}
                   isLoading={isLoading}
                 />
               </CardContent>
@@ -182,7 +182,7 @@ export const FilterAnalyticsDashboard = React.memo(function FilterAnalyticsDashb
               </CardHeader>
               <CardContent>
                 <PresetAdoptionPanel
-                  metrics={presetMetrics}
+                  metrics={(presetMetrics || {}) as Record<string, unknown>}
                   isLoading={isLoading}
                 />
               </CardContent>
