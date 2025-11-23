@@ -11,8 +11,8 @@ const nextConfig = {
   // Allow Builder preview domain to access dev resources like /_next/* during development
   allowedDevOrigins: ["*.projects.builder.codes", "*.fly.dev"],
   turbopack: {},
-  
-  
+
+
   // External packages for server components
   serverExternalPackages: ['@sentry/nextjs', 'ioredis'],
   // Prevent bundling node built-ins into client bundles (stubs for Turbopack/webpack)
@@ -31,7 +31,7 @@ const nextConfig = {
     }
     return config
   },
-  
+
   // Experimental features for better performance
   experimental: {
     // Removed optimizeCss - requires additional critters dependency
@@ -97,6 +97,7 @@ const sentryPluginOptions = {
   disableClientWebpackPlugin: disableSourcemapsOnNetlify || !hasSentryToken,
 }
 
-const configWithSentry = shouldUseSentry ? withSentryConfig(nextConfig, sentryPluginOptions) : nextConfig
+// Sentry disabled for build stability
+// const configWithSentry = shouldUseSentry ? withSentryConfig(nextConfig, sentryPluginOptions) : nextConfig
 
-export default configWithSentry
+export default nextConfig

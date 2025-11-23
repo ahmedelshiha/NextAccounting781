@@ -50,7 +50,7 @@ export const GET = withTenantContext(async (request: NextRequest) => {
         unreadCount,
         limit: options.limit,
         offset: options.offset || 0,
-        hasMore: (options.offset || 0) + options.limit < total,
+        hasMore: (options.offset || 0) + (options.limit || 20) < total,
       },
     })
   } catch (error) {
